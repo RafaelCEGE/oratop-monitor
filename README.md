@@ -9,6 +9,25 @@ A script to automatically captures Oracle DB performance metrics using oratop, s
 
 Automated Oracle DB performance monitoring using `oratop`. Captures hourly snapshots, compresses logs with `7za`, and maintains 24-hour retention with error-only logging.
 
+```text
+============================================
+
+  /$$$$$$                       /$$                        
+ /$$__  $$                     | $$                        
+| $$  \ $$  /$$$$$$  /$$$$$$  /$$$$$$    /$$$$$$   /$$$$$$ 
+| $$  | $$ /$$__  $$|____  $$|_  $$_/   /$$__  $$ /$$__  $$
+| $$  | $$| $$  \__/ /$$$$$$$  | $$    | $$  \ $$| $$  \ $$
+| $$  | $$| $$      /$$__  $$  | $$ /$$| $$  | $$| $$  | $$
+|  $$$$$$/| $$     |  $$$$$$$  |  $$$$/|  $$$$$$/| $$$$$$$/
+ \______/ |__/      \_______/   \___/   \______/ | $$____/ 
+                                                 | $$      
+                                                 | $$      
+                                                 |__/      
+  
+      Oracle DB Performance Monitor         
+============================================
+```
+
 ## 📚 Summary
 
 - [📦 Prerequisites](#-prerequisites)
