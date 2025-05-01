@@ -121,7 +121,7 @@ kill $(pgrep -f monitor_oratop.sh)
 
 ## 📜 License
 MIT License - Free for modification and redistribution.
-Maintainer: [Pablo Travesso/[GitHub Profile](https://github.com/ptravesso-dba)/[LinkedIn Profile]([https://github.com/ptravesso-dba](https://www.linkedin.com/in/pablo-travesso-141082232/)]
+Maintainer: [Pablo Travesso/[GitHub Profile](https://github.com/ptravesso-dba)/[LinkedIn Profile](https://www.linkedin.com/in/pablo-travesso-141082232/)]
 Version: 1.0
 
 > 💡 Pro Tip: For production environments, consider adding this to cron or a systemd service for auto-restart.
