@@ -61,7 +61,7 @@ INTERVAL_SECONDS=5                        # Snapshot frequency (seconds)
 
 ##   🔍 Checking Output
 
-# View latest compressed data
+View latest compressed data
   ```bash
 ls -lt /home/oracle/oratop-history/logs/*.zip
   ```
