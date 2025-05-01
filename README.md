@@ -21,6 +21,7 @@ Clone/download the script:
   ```bash
   curl -o /home/oracle/monitor_oratop.sh https://example.com/path/to/script.sh
   chmod +x /home/oracle/monitor_oratop.sh
+  ```
 
 🛠 Usage
 Start Monitoring
