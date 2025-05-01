@@ -32,8 +32,10 @@ Clone/download the script:
 screen -S oratop_monitor
 /home/oracle/monitor_oratop.sh
   ```
-> Detach session: Ctrl+A → D
-> Resume: screen -r oratop_monitor
+  ```
+Detach session: Ctrl+A → D
+Resume: screen -r oratop_monitor
+  ```
 
 Background Execution (Alternative)
   ```bash
