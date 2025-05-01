@@ -12,18 +12,15 @@ Automated Oracle DB performance monitoring using `oratop`. Captures hourly snaps
 ## 📦 Prerequisites
 
 - **Oracle Linux** (or RHEL/CentOS 7+)
-- `oratop` (included with Oracle DB installations)
+- `oratop` (included with Oracle DB installations 19c)
 - `p7zip` for compression:
   ```bash
   sudo yum install p7zip -y
 🚀 Installation
 Clone/download the script:
-
-bash
-curl -o /home/oracle/monitor_oratop.sh https://example.com/path/to/script.sh
-chmod +x /home/oracle/monitor_oratop.sh
-Create data directory:
-mkdir -p /home/oracle/oratop-history/logs
+  ```bash
+  curl -o /home/oracle/monitor_oratop.sh https://example.com/path/to/script.sh
+  chmod +x /home/oracle/monitor_oratop.sh
 
 🛠 Usage
 Start Monitoring
