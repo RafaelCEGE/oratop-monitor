@@ -84,10 +84,11 @@ Detach session: Ctrl+A → D
 Resume: screen -r oratop_monitor
   ```
 - The script will prompt you for:
--- Retention before compressing `.out` files (e.g., `90 minutes`, `2 hours`)
--- Retention for compressed logs (e.g., `2 days`, `12 hours`)
--- Seconds between each data collection (e.g., `5`)
--- Duration for each output file (e.g., `60 minutes`, `2 hours`)
+- Retention before compressing `.out` files (e.g., `90 minutes`, `2 hours`)
+- Retention for compressed logs (e.g., `2 days`, `12 hours`)
+- Seconds between each data collection (e.g., `5`)
+- Duration for each output file (e.g., `60 minutes`, `2 hours`)
+
 - After configuration, a summary will be displayed and monitoring will begin.
 
 **Stop Monitoring**
@@ -101,6 +102,7 @@ To safely stop all running oratop processes started by this script:
 - Compression: After the configured retention period, .out files are compressed to .zip and moved to the logs/ directory.
 - Cleanup: Compressed logs are deleted after their retention period.
 - Logs: All script activity is logged to oratop.log.
+
 Directories:
 - Raw output: /home/oracle/oratop-history/
 - Compressed logs: /home/oracle/oratop-history/logs/
