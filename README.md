@@ -1,5 +1,6 @@
 # oratop-monitor
-A script to automatically captures Oracle DB performance metrics using oratop, stores 1-hour snapshots, compresses logs with 7za, and retains data for 24 hours. Only logs errors.
+A robust Bash script for automated Oracle Database performance monitoring using oratop.
+It features interactive configuration, log retention, automatic compression, and safe process management.
 
 # Oracle Database Performance Monitor (`oratop-history`)
 
@@ -40,6 +41,12 @@ Automated Oracle DB performance monitoring using `oratop`. Captures hourly snaps
 - [⏹ Stopping the Service](#-stopping-the-service)
 - [📜 License](#-license)
 
+## 📝 Features
+- `Interactive setup`: Guides you through all configuration steps.
+- `Retention management`: Automatically compresses and cleans up old logs.
+- `Safe stop`: Easily stop all running oratop processes with a single command.
+- `User-friendly`: Clear prompts, validation, and helpful summaries.
+- `Customizable`: Choose intervals, durations, and retention policies.
 
 ## 📦 Prerequisites
 
@@ -48,31 +55,57 @@ Automated Oracle DB performance monitoring using `oratop`. Captures hourly snaps
 - `p7zip` for compression:
   ```bash
   sudo yum install p7zip -y
+- `Bash 4.x` or later
+- `Oracle user environment` (/home/oracle/.bash_profile)
 
 ## 🚀 Installation
 
 Clone/download the script:
   ```bash
-  curl -o /home/oracle/monitor_oratop.sh https://example.com/path/to/script.sh
-  chmod +x /home/oracle/monitor_oratop.sh
+    git clone https://github.com/yourusername/monitor_oratop.git
+    cd monitor_oratop
   ```
+Make the script executable:
+  ```bash
+    chmod +x monitor_oratop.sh
+  ```
+> Ensure oratop and 7za are installed and in the expected locations.
+
 
 ## 🛠 Usage
 
 **Start Monitoring**
   ```bash
 screen -S oratop_monitor
-/home/oracle/monitor_oratop.sh
+cd /home/oracle/
+./monitor_oratop.sh
   ```
   ```
 Detach session: Ctrl+A → D
 Resume: screen -r oratop_monitor
   ```
+- The script will prompt you for:
+-- Retention before compressing `.out` files (e.g., `90 minutes`, `2 hours`)
+-- Retention for compressed logs (e.g., `2 days`, `12 hours`)
+-- Seconds between each data collection (e.g., `5`)
+-- Duration for each output file (e.g., `60 minutes`, `2 hours`)
+- After configuration, a summary will be displayed and monitoring will begin.
 
-Background Execution (Alternative)
+**Stop Monitoring**
+To safely stop all running oratop processes started by this script:
   ```bash
-nohup /home/oracle/monitor_oratop.sh >/dev/null 2>&1 &
+./monitor_oratop.sh stop 
   ```
+
+**How It Works**
+- Data Collection: Runs oratop at your chosen interval and duration, saving output to .out files.
+- Compression: After the configured retention period, .out files are compressed to .zip and moved to the logs/ directory.
+- Cleanup: Compressed logs are deleted after their retention period.
+- Logs: All script activity is logged to oratop.log.
+Directories:
+- Raw output: /home/oracle/oratop-history/
+- Compressed logs: /home/oracle/oratop-history/logs/
+- Script log: /home/oracle/oratop-history/oratop.log
 
 ## 📂 File Structure
 
@@ -84,40 +117,43 @@ nohup /home/oracle/monitor_oratop.sh >/dev/null 2>&1 &
 └── oratop.log               # Error logs (only)
   ```
 
-## ⚙️ Configuration
-
-Edit these variables in the script:
-  ```
-ORATOP_DIR="/home/oracle/oratop-history"  # Storage path
-RETENTION_HOURS=24                        # Hours to keep data
-INTERVAL_SECONDS=5                        # Snapshot frequency (seconds)
-  ```
-
-##   🔍 Checking Output
-
-View latest compressed data
+**Example**
   ```bash
-ls -lt /home/oracle/oratop-history/logs/*.zip
-  ```
+======================================
 
-## Check errors
-  ```bash
-tail -f /home/oracle/oratop-history/oratop.log
+     ___           _                          
+    /___\_ __ __ _| |_ ___  _ __              
+   //  // '__/ _` | __/ _ \| '_ \            
+  / \_//| | | (_| | || (_) | |_) |           
+  \___/ |_|  \__,_|\__\___/| .__/            
+                            |_|              
+
+    Oracle DB Performance Monitor      
+    Developed by Pablo Travesso      
+======================================
+
+🔧 Configuring oratop monitor...
+Retention before compressing .out (e.g. 90 minutes / 2 hours): 90 minutes
+Retention for compressed logs (e.g. 2 days, 12 hours, 90 minutes): 2 days
+Seconds between each data collection? (e.g. 5): 5
+For how long should each output file run? (e.g. 60 minutes / 2 hours): 60 minutes
+✅ Configuration saved.
+
+========= Configuration Summary =========
+• Data will be collected every 5 seconds.
+• Each output file will run for 60 minutes (total 3600 seconds, 720 iterations).
+• .out files will be compressed after 90 minutes.
+• Compressed .zip files will be kept for 2 days.
+• Output .out files are stored in: /home/oracle/oratop-history
+• Compressed .zip files are stored in: /home/oracle/oratop-history/logs
+• Log file for this script: /home/oracle/oratop-history/oratop.log
+=========================================
   ```
 
 ## 🚨 Troubleshooting
-Issue	Solution
-  ```
-7za: command not found	sudo yum install p7zip
-Permission denied	Ensure oracle user owns the directory: chown oracle:oinstall /home/oracle/oratop-history
-No output files	Verify Oracle DB connectivity and SYSDBA privileges
-  ```
-
-## ⏹ Stopping the Service
-  ```bash
-pkill -f monitor_oratop.sh  # OR
-kill $(pgrep -f monitor_oratop.sh)
-  ```
+- oratop fails to run: Ensure the interval is at least 3 seconds and oratop is installed at the expected path.
+- Compression fails: Make sure `7za` is installed and in your `PATH`.
+- Permission errors: Run as the Oracle user or ensure correct permissions on output directories.
 
 ## 📜 License
 MIT License - Free for modification and redistribution.
@@ -125,3 +161,7 @@ Maintainer: [Pablo Travesso/[GitHub Profile](https://github.com/ptravesso-dba)/[
 Version: 1.0
 
 > 💡 Pro Tip: For production environments, consider adding this to cron or a systemd service for auto-restart.
+> To make it easier to use the tool, try to add an alias at the end of your Oracle user's .bash_profile:
+  ```bash
+alias monitor_oratop='bash /home/oracle/monitor_oratop.sh'
+  ```
