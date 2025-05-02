@@ -30,14 +30,12 @@ It features interactive configuration, log retention, automatic compression, and
 
 ## 📚 Summary
 
+- [📝 Features](#-features)
 - [📦 Prerequisites](#-prerequisites)
 - [🚀 Installation](#-installation)
 - [🛠 Usage](#-usage)
 - [📂 File Structure](#-file-structure)
-- [⚙️ Configuration](#️-configuration)
-- [🔍 Checking Output](#-checking-output)
 - [🚨 Troubleshooting](#-troubleshooting)
-- [⏹ Stopping the Service](#-stopping-the-service)
 - [📜 License](#-license)
 
 ## 📝 Features
@@ -92,6 +90,7 @@ Resume: screen -r oratop_monitor
 - After configuration, a summary will be displayed and monitoring will begin.
 
 **Stop Monitoring**
+
 To safely stop all running oratop processes started by this script:
   ```bash
 ./monitor_oratop.sh stop 
@@ -158,10 +157,13 @@ For how long should each output file run? (e.g. 60 minutes / 2 hours): 60 minute
 
 ## 📜 License
 MIT License - Free for modification and redistribution.
+
 Maintainer: [Pablo Travesso/[GitHub Profile](https://github.com/ptravesso-dba)/[LinkedIn Profile](https://www.linkedin.com/in/pablo-travesso-141082232/)]
+
 Version: 1.0
 
 > 💡 Pro Tip: For production environments, consider adding this to cron or a systemd service for auto-restart.
+
 > To make it easier to use the tool, try to add an alias at the end of your Oracle user's .bash_profile:
   ```bash
 alias monitor_oratop='bash /home/oracle/monitor_oratop.sh'
