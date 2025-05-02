@@ -1,6 +1,4 @@
 # oratop-monitor
-A robust Bash script for automated Oracle Database performance monitoring using oratop.
-It features interactive configuration, log retention, automatic compression, and safe process management.
 
 # Oracle Database Performance Monitor (`oratop-history`)
 
@@ -8,7 +6,8 @@ It features interactive configuration, log retention, automatic compression, and
 ![Oracle DB](https://img.shields.io/badge/Oracle-Database-%23F80000?logo=oracle)
 ![License](https://img.shields.io/badge/License-MIT-blue)
 
-Automated Oracle DB performance monitoring using `oratop`. Captures hourly snapshots, compresses logs with `7za`, and maintains 24-hour retention with error-only logging.
+A robust Bash script for automated Oracle Database performance monitoring using `oratop`.
+It features interactive configuration, log retention, automatic compression, and safe process management.
 
 ```text
 ============================================
