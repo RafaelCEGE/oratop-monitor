@@ -37,6 +37,9 @@ echo "    Oracle DB Performance Monitor      "
 echo "    Developed by Pablo Travesso      "
 echo "======================================"
 
+# Trap Ctrl+C and clean up child processes
+trap 'echo -e "\n🛑 Monitoring interrupted by user. Exiting..."; pkill -P $$; exit 0' SIGINT
+
 mkdir -p "$ORATOP_DIR" "$LOG_DIR"
 
 is_non_negative_integer() {
@@ -59,78 +62,176 @@ if [[ -f "$CONFIG_FILE" ]]; then
 fi
 
 if [[ ! -f "$CONFIG_FILE" ]]; then
-    echo ""
-    echo "🔧 Configuring oratop monitor..."
-
     while true; do
-        read -p "Retention before compressing .out (e.g. 90 minutes / 2 hours): " RETENTION_INPUT
-        if [[ "$RETENTION_INPUT" =~ ^([0-9]+)[[:space:]]*(minutes|minute|hours|hour)$ ]]; then
-            VALUE="${BASH_REMATCH[1]}"
-            UNIT="${BASH_REMATCH[2]}"
-            [[ "$UNIT" =~ minutes|minute ]] && RETENTION_SECONDS=$((VALUE * 60))
-            [[ "$UNIT" =~ hours|hour ]] && RETENTION_SECONDS=$((VALUE * 3600))
-            break
-        else
-            echo "❌ Please enter format like: 90 minutes / 2 hours."
+        echo ""
+        echo "🔧 Configuring oratop monitor..."
+
+        while true; do
+            read -p "Retention before compressing .out (e.g. 90 minutes / 2 hours): " RETENTION_INPUT
+            if [[ "$RETENTION_INPUT" =~ ^([0-9]+)[[:space:]]*(minutes|minute|hours|hour)$ ]]; then
+                VALUE="${BASH_REMATCH[1]}"
+                UNIT="${BASH_REMATCH[2]}"
+                [[ "$UNIT" =~ minutes|minute ]] && RETENTION_SECONDS=$((VALUE * 60))
+                [[ "$UNIT" =~ hours|hour ]] && RETENTION_SECONDS=$((VALUE * 3600))
+                break
+            else
+                echo "❌ Please enter format like: 90 minutes / 2 hours."
+            fi
+        done
+
+        while true; do
+            read -p "Retention for compressed logs (e.g. 2 days, 12 hours, 90 minutes): " RETENTION_FILE
+            is_valid_retention_format "$RETENTION_FILE" && break
+            echo "❌ Invalid format. Try again."
+        done
+
+        while true; do
+            read -p "Seconds between each data collection? (e.g. 5): " INTERVAL_SECONDS
+            is_non_negative_integer "$INTERVAL_SECONDS" && (( INTERVAL_SECONDS > 0 )) && break
+            echo "❌ Invalid input."
+        done
+
+        MIN_ORATOP_INTERVAL=3
+        if (( INTERVAL_SECONDS < MIN_ORATOP_INTERVAL )); then
+            echo "❌ oratop requires a minimum interval of $MIN_ORATOP_INTERVAL seconds."
+            read -p "Do you want to try again? (y/n): " try_again
+            if [[ ! "$try_again" =~ ^[Yy]$ ]]; then
+                echo "Exiting configuration."
+                exit 1
+            else
+                continue
+            fi
         fi
-    done
 
-    while true; do
-        read -p "Retention for compressed logs (e.g. 2 days, 12 hours, 90 minutes): " RETENTION_FILE
-        is_valid_retention_format "$RETENTION_FILE" && break
-        echo "❌ Invalid format. Try again."
-    done
+        while true; do
+            read -p "For how long should each output file run? (e.g. 60 minutes / 2 hours): " DURATION_INPUT
+            if [[ "$DURATION_INPUT" =~ ^([0-9]+)[[:space:]]*(minutes|minute|hours|hour)$ ]]; then
+                DURATION_VALUE="${BASH_REMATCH[1]}"
+                DURATION_UNIT="${BASH_REMATCH[2]}"
+                [[ "$DURATION_UNIT" =~ minutes|minute ]] && DURATION_SECONDS=$((DURATION_VALUE * 60))
+                [[ "$DURATION_UNIT" =~ hours|hour ]] && DURATION_SECONDS=$((DURATION_VALUE * 3600))
+                break
+            else
+                echo "❌ Please enter format like: 60 minutes / 2 hours."
+            fi
+        done
 
-    while true; do
-        read -p "Seconds between each data collection? (e.g. 5): " INTERVAL_SECONDS
-        is_non_negative_integer "$INTERVAL_SECONDS" && (( INTERVAL_SECONDS > 0 )) && break
-        echo "❌ Invalid input."
-    done
+        # Minimums
+        MIN_DURATION=10
+        MIN_RETENTION=10
+        MIN_INTERVAL=1
 
-    while true; do
-        read -p "For how long should each output file run? (e.g. 60 minutes / 2 hours): " DURATION_INPUT
-        if [[ "$DURATION_INPUT" =~ ^([0-9]+)[[:space:]]*(minutes|minute|hours|hour)$ ]]; then
-            DURATION_VALUE="${BASH_REMATCH[1]}"
-            DURATION_UNIT="${BASH_REMATCH[2]}"
-            [[ "$DURATION_UNIT" =~ minutes|minute ]] && DURATION_SECONDS=$((DURATION_VALUE * 60))
-            [[ "$DURATION_UNIT" =~ hours|hour ]] && DURATION_SECONDS=$((DURATION_VALUE * 3600))
-            break
-        else
-            echo "❌ Please enter format like: 60 minutes / 2 hours."
+        if (( DURATION_SECONDS < MIN_DURATION )); then
+            echo "❌ Duration must be at least $MIN_DURATION seconds."
+            read -p "Do you want to try again? (y/n): " try_again
+            if [[ ! "$try_again" =~ ^[Yy]$ ]]; then
+                echo "Exiting configuration."
+                exit 1
+            else
+                continue
+            fi
         fi
+
+        if (( INTERVAL_SECONDS < MIN_INTERVAL )); then
+            echo "❌ Interval must be at least $MIN_INTERVAL second."
+            read -p "Do you want to try again? (y/n): " try_again
+            if [[ ! "$try_again" =~ ^[Yy]$ ]]; then
+                echo "Exiting configuration."
+                exit 1
+            else
+                continue
+            fi
+        fi
+
+        if (( RETENTION_SECONDS < MIN_RETENTION )); then
+            echo "❌ Retention before compressing must be at least $MIN_RETENTION seconds."
+            read -p "Do you want to try again? (y/n): " try_again
+            if [[ ! "$try_again" =~ ^[Yy]$ ]]; then
+                echo "Exiting configuration."
+                exit 1
+            else
+                continue
+            fi
+        fi
+
+        if (( INTERVAL_SECONDS >= DURATION_SECONDS )); then
+            echo "❌ Interval must be less than duration."
+            read -p "Do you want to try again? (y/n): " try_again
+            if [[ ! "$try_again" =~ ^[Yy]$ ]]; then
+                echo "Exiting configuration."
+                exit 1
+            else
+                continue
+            fi
+        fi
+
+        if (( RETENTION_SECONDS == DURATION_SECONDS )); then
+            echo "❌ Retention before compressing and output file duration cannot be the same."
+            read -p "Do you want to try again? (y/n): " try_again
+            if [[ ! "$try_again" =~ ^[Yy]$ ]]; then
+                echo "Exiting configuration."
+                exit 1
+            else
+                continue
+            fi
+        fi
+
+        if (( DURATION_SECONDS < 2 * INTERVAL_SECONDS )); then
+            echo "❌ Duration should be at least twice the interval."
+            read -p "Do you want to try again? (y/n): " try_again
+            if [[ ! "$try_again" =~ ^[Yy]$ ]]; then
+                echo "Exiting configuration."
+                exit 1
+            else
+                continue
+            fi
+        fi
+
+        if (( RETENTION_SECONDS < 2 * INTERVAL_SECONDS )); then
+            echo "❌ Retention before compressing should be at least twice the interval."
+            read -p "Do you want to try again? (y/n): " try_again
+            if [[ ! "$try_again" =~ ^[Yy]$ ]]; then
+                echo "Exiting configuration."
+                exit 1
+            else
+                continue
+            fi
+        fi
+
+        ITERATIONS=$(( DURATION_SECONDS / INTERVAL_SECONDS ))
+
+        if (( ITERATIONS < 1 )); then
+            echo "❌ The duration is too short or the interval is too long. Number of iterations would be zero."
+            echo "   Please ensure that duration is greater than interval."
+            read -p "Do you want to try again? (y/n): " try_again
+            if [[ ! "$try_again" =~ ^[Yy]$ ]]; then
+                echo "Exiting configuration."
+                exit 1
+            else
+                continue
+            fi
+        fi
+
+        echo "RETENTION_SECONDS=$RETENTION_SECONDS" > "$CONFIG_FILE"
+        echo "RETENTION_FILE=\"$RETENTION_FILE\"" >> "$CONFIG_FILE"
+        echo "INTERVAL_SECONDS=$INTERVAL_SECONDS" >> "$CONFIG_FILE"
+        echo "DURATION_SECONDS=$DURATION_SECONDS" >> "$CONFIG_FILE"
+        echo "ITERATIONS=$ITERATIONS" >> "$CONFIG_FILE"
+        echo "✅ Configuration saved."
+
+        echo ""
+        echo "========= Configuration Summary ========="
+        echo "• Data will be collected every $INTERVAL_SECONDS seconds."
+        echo "• Each output file will run for $DURATION_VALUE $DURATION_UNIT (total $DURATION_SECONDS seconds, $ITERATIONS iterations)."
+        echo "• .out files will be compressed after $RETENTION_INPUT."
+        echo "• Compressed .zip files will be kept for $RETENTION_FILE."
+        echo "• Output .out files are stored in: $ORATOP_DIR"
+        echo "• Compressed .zip files are stored in: $LOG_DIR"
+        echo "• Log file for this script: $LOG_FILE"
+        echo "========================================="
+        echo ""
+        break
     done
-
-    if (( RETENTION_SECONDS > 0 && DURATION_SECONDS > RETENTION_SECONDS )); then
-        echo "❌ Output duration cannot exceed retention time."
-        exit 1
-    fi
-
-    ITERATIONS=$(( DURATION_SECONDS / INTERVAL_SECONDS ))
-
-    if (( ITERATIONS < 1 )); then
-        echo "❌ The duration is too short or the interval is too long. Number of iterations would be zero."
-        echo "   Please ensure that duration is greater than interval."
-        exit 1
-    fi
-
-    echo "RETENTION_SECONDS=$RETENTION_SECONDS" > "$CONFIG_FILE"
-    echo "RETENTION_FILE=\"$RETENTION_FILE\"" >> "$CONFIG_FILE"
-    echo "INTERVAL_SECONDS=$INTERVAL_SECONDS" >> "$CONFIG_FILE"
-    echo "DURATION_SECONDS=$DURATION_SECONDS" >> "$CONFIG_FILE"
-    echo "ITERATIONS=$ITERATIONS" >> "$CONFIG_FILE"
-    echo "✅ Configuration saved."
-
-    echo ""
-    echo "========= Configuration Summary ========="
-    echo "• Data will be collected every $INTERVAL_SECONDS seconds."
-    echo "• Each output file will run for $DURATION_VALUE $DURATION_UNIT (total $DURATION_SECONDS seconds, $ITERATIONS iterations)."
-    echo "• .out files will be compressed after $RETENTION_INPUT."
-    echo "• Compressed .zip files will be kept for $RETENTION_FILE."
-    echo "• Output .out files are stored in: $ORATOP_DIR"
-    echo "• Compressed .zip files are stored in: $LOG_DIR"
-    echo "• Log file for this script: $LOG_FILE"
-    echo "========================================="
-    echo ""
 fi
 
 source "$CONFIG_FILE"
